@@ -4,6 +4,7 @@ defmodule IssueManager.Cli do
   """
 
   @default_count 10
+  @api_endpoint Application.get_env(:issue_manager, :github_api_endpoint)
 
   @doc """
   argv can be --help or -h which returns :help.
@@ -17,6 +18,9 @@ defmodule IssueManager.Cli do
     |> execute_args()
   end
 
+  @doc """
+  Parses command arguments as :help or user, project, count
+  """
   def parse_args(argv) do
     parsed = OptionParser.parse(argv, switches: [help: :boolean], aliases: [h: :help])
 
@@ -36,13 +40,13 @@ defmodule IssueManager.Cli do
   end
 
   defp execute_args({user, project, _count}) do
-    IssueManager.IssueReader.get(user, project)
-    |> handle_read()
+    result = IssueManager.GithubClient.get(@api_endpoint, user, project)
+    handle_result(result)
   end
 
-  defp handle_read({:ok, body}), do: body
+  defp handle_result({:ok, body}), do: Enum.take(body, 3)
 
-  defp handle_read({:error, error}) do
+  defp handle_result({:error, error}) do
     message = error["message"]
     IO.puts "Error reading issues from source: #{message}"
     System.halt(2)
