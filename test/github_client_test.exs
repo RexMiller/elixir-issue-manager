@@ -7,6 +7,7 @@ defmodule IssueManager.GithubClientTest do
 
   test "GithubClient.get returns issues response for valid user project" do
     {:ok, body} = Client.get(@api_endpoint, "phoenixframework", "phoenix")
+    IO.inspect body
     assert is_list(body)
   end
 

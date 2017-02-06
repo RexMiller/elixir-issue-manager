@@ -8,10 +8,6 @@ defmodule IssueManager.GithubClient do
     format_url(endpoint, user, project)
     |> HTTPoison.get(@user_agent)
     |> handle_response()
-    
-    # |> get_list()
-    # |> Enum.map(fn(i) -> [i.number, i.created_at, i.title] end)
-    # |> TableRex.quick_render!(["number", "created_at", "title"])
   end
 
   defp format_url(endpoint, user, project) do
@@ -19,7 +15,7 @@ defmodule IssueManager.GithubClient do
   end
 
   defp handle_response({:ok, %{status_code: 200, body: body}}) do
-    {:ok, Poison.decode!(body, as: [%IssueManager.Issue{}])}
+    {:ok, Poison.decode!(body)}
   end 
 
   defp handle_response({_, %{status_code: _, body: body}}) do

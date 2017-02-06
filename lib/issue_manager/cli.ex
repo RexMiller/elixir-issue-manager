@@ -42,6 +42,8 @@ defmodule IssueManager.Cli do
   defp execute_args({user, project, _count}) do
     result = IssueManager.GithubClient.get(@api_endpoint, user, project)
     handle_result(result)
+    |> Enum.map(fn(i) -> [i.number, i.created_at, i.title] end)
+    |> TableRex.quick_render!(["number", "created_at", "title"])
   end
 
   defp handle_result({:ok, body}), do: Enum.take(body, 3)
