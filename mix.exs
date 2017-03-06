@@ -30,8 +30,7 @@ defmodule IssueManager.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 0.11.0"},
-      {:poison, "~> 3.1"},
-      {:table_rex, "~> 0.10.0"}
+      {:poison, "~> 3.1"}
     ]
   end
 end

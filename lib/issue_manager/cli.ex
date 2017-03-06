@@ -3,7 +3,10 @@ defmodule IssueManager.Cli do
   Parses command line args and dispatches commands.
   """
 
-  @default_count 10
+  import IssueManager.GithubClient
+  import IssueManager.Formatters.TextTable
+
+  @default_count 2
   @api_endpoint Application.get_env(:issue_manager, :github_api_endpoint)
 
   @doc """
@@ -14,7 +17,8 @@ defmodule IssueManager.Cli do
   Returns a tuple of {user, project, count} or :help.
   """
   def run(argv) do
-    parse_args(argv)
+    argv 
+    |> parse_args()
     |> execute_args()
   end
 
@@ -39,18 +43,26 @@ defmodule IssueManager.Cli do
     System.halt(0)
   end
 
-  defp execute_args({user, project, _count}) do
-    result = IssueManager.GithubClient.get(@api_endpoint, user, project)
-    handle_result(result)
-    |> Enum.map(fn(i) -> [i.number, i.created_at, i.title] end)
-    |> TableRex.quick_render!(["number", "created_at", "title"])
+  defp execute_args({user, project, count}) do
+    get(@api_endpoint, user, project)
+    |> handle_result()
+    |> Enum.take(count)
+    |> sort_ascending()
+    |> render(["number", "created_at", "title"], %{"number" => "#"})
   end
 
-  defp handle_result({:ok, body}), do: Enum.take(body, 3)
+  defp handle_result({:ok, body}), do: body
 
   defp handle_result({:error, error}) do
     message = error["message"]
     IO.puts "Error reading issues from source: #{message}"
     System.halt(2)
+  end
+
+  @doc """
+  Sorts by "created_at" field
+  """
+  def sort_ascending(data, sort_by \\ "created_at") do
+    Enum.sort(data, fn(row, next_row) -> row[sort_by] < next_row[sort_by] end) 
   end
 end
