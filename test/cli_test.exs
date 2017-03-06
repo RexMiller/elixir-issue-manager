@@ -24,7 +24,7 @@ defmodule IssueManager.CliTest do
     {user, project, count} = parse_args(["someuser", "someproject"])
     assert("someuser" == user)
     assert("someproject" == project)
-    assert(10 == count)
+    assert(2 == count)
   end
 
   test "sorts in ascending order" do

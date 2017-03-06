@@ -3,7 +3,10 @@ defmodule IssueManager.Mixfile do
 
   def project do
     [app: :issue_manager,
+     escript: escript_config(),
      version: "0.1.0",
+     name: "Elixir issue manager",
+     source_url: "https://github.com/RexMiller/elixir-issue-manager",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -30,7 +33,12 @@ defmodule IssueManager.Mixfile do
   defp deps do
     [
       {:httpoison, "~> 0.11.0"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:ex_doc, "~> 0.15.0"}
     ]
+  end
+
+  defp escript_config do
+    [main_module: IssueManager.Cli]
   end
 end

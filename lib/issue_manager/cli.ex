@@ -3,23 +3,26 @@ defmodule IssueManager.Cli do
   Parses command line args and dispatches commands.
   """
 
-  import IssueManager.GithubClient
+  alias IssueManager.GithubClient, as: Github
   import IssueManager.Formatters.TextTable
 
   @default_count 2
   @api_endpoint Application.get_env(:issue_manager, :github_api_endpoint)
 
   @doc """
-  argv can be --help or -h which returns :help.
+  Fetches a list of top n issues from a github project and formats them as a table.
+  
+  argv is a list and can contain --help or -h which returns :help, otherwise list 
+  elements will be parsed as Github username, project and count. 
 
-  Otherwise will be parsed as Github username, project and count. 
-
-  Returns a tuple of {user, project, count} or :help.
+  ## Example
+  `IssueManager.Cli.run(["phoenixframework", "phoenix"])`
   """
-  def run(argv) do
-    argv 
+  def main(argv) do
+    argv
     |> parse_args()
-    |> execute_args()
+    |> execute()
+    |> IO.puts
   end
 
   @doc """
@@ -36,24 +39,25 @@ defmodule IssueManager.Cli do
     end
   end
 
-  defp execute_args(:help) do
+  defp execute(:help) do
     IO.puts """
     Usage: issues_manager <user> <project> [ count | #{@default_count} ]
     """
     System.halt(0)
   end
 
-  defp execute_args({user, project, count}) do
-    get(@api_endpoint, user, project)
-    |> handle_result()
+  defp execute({user, project, count}) do
+    Github.get(@api_endpoint, user, project)
+    |> decode_response()
     |> Enum.take(count)
     |> sort_ascending()
-    |> render(["number", "created_at", "title"], %{"number" => "#"})
+    |> Enum.map(fn(issue) -> IssueManager.Issue.create(issue) end)   
+    |> render_table([:number, :created_at, :title], %{:number => "#"})
   end
 
-  defp handle_result({:ok, body}), do: body
+  defp decode_response({:ok, body}), do: body
 
-  defp handle_result({:error, error}) do
+  defp decode_response({:error, error}) do
     message = error["message"]
     IO.puts "Error reading issues from source: #{message}"
     System.halt(2)

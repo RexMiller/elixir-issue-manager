@@ -3,6 +3,7 @@
 use Mix.Config
 
   config :issue_manager, github_api_endpoint: "https://api.github.com"
+  config :logger, compile_time_purge_level: :info
 
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this

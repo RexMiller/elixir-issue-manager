@@ -2,14 +2,41 @@ defmodule IssueManager.Formatters.TextTableTest do
   import IssueManager.Formatters.TextTable
   use ExUnit.Case
 
+  defmodule Sample do
+    defstruct(
+      c1: nil, c2: nil, c3: nil
+    )    
+  end
+
   test "renders an ascii table for a given list of maps" do
-    sample_data() 
-    |> render(["c1", "c3"])
-    |> IO.puts
+    render_table(sample_data_structs(), [:c1, :c3])
+    |> String.split("\n")
+    |> (fn(rows) ->
+         assert List.first(rows) == "c1   |c3       "
+         assert List.last(rows) == "r2-c1|r2-c3++++"
+       end).()
+  end
+
+  test "renders headers" do
+    result = render_headers(["col1", "col2", "col3"], [5, 5, 5])
+    assert "col1 |col2 |col3 " == result
+  end
+
+  test "renders headers with aliases" do
+    result = render_headers(["col1", "col2", "col3"], [5, 5, 5], %{"col3" => "fld3"})
+    assert "col1 |col2 |fld3 " == result
   end
 
   test "get columns from rows" do
     rendered = to_column_data(sample_data(), ["c1", "c3"])
+    expected = [["r1-c1", "r2-c1"], ["r1-c3", "r2-c3++++"]]
+    assert expected == rendered
+  end
+
+  test "get columns from rows for structs" do
+    rendered = to_column_data(sample_data_structs(), [:c1, :c3])
+    expected = [["r1-c1", "r2-c1"], ["r1-c3", "r2-c3++++"]]
+    assert expected == rendered
   end
 
   test "get field lengths for columns" do
@@ -50,19 +77,11 @@ defmodule IssueManager.Formatters.TextTableTest do
     ]
   end
 
-  defp get_data_with_atoms() do
+  defp sample_data_structs() do
     [
-      %{:number => 1, :created_at => "2017-01-01T12:41:56Z", :title => "Short title"},
-      %{:number => 22, :created_at => "2017-02-05T12:41:56Z", :title => "This is a medium title"},
-      %{:number => 333, :created_at => "2017-02-01T12:41:56Z", :title => "This is really really long title, so long, just so long"}
-    ]    
+      %Sample{:c1 => "r1-c1", :c2 => "r1-c2", :c3 => "r1-c3"},
+      %Sample{:c1 => "r2-c1", :c2 => "r2-c2++", :c3 => "r2-c3++++"}
+    ]
   end
 
-  defp get_data() do
-    [
-      %{"number" => 1, "created_at" => "2017-01-01T12:41:56Z", "title" => "Short title"},
-      %{"number" => 22, "created_at" => "2017-02-05T12:41:56Z", "title" => "This is a medium title"},
-      %{"number" => 333, "created_at" => "2017-02-01T12:41:56Z", "title" => "This is really really long title, so long, just so long"}
-    ]    
-  end
 end

@@ -1,31 +1,25 @@
 defmodule IssueManager.Formatters.TextTable do
 
-  # @lengths %{"number" => 4, "created_at" => 20, "title" => 50}
-
-  # def render(data, field_list, aliases \\ %{}) do
-  #   table_data = Enum.map(data, fn(row) -> with_fields(row, field_list) end)
-
-  #   """
-  #   #{render_headers(field_list, aliases)}
-  #   #{render_divider(field_list)}
-  #   #{render_body(table_data)}    
-  #   """
-  # end
-
-  # defp with_fields(row, field_list) do
-  #   field_list
-  #   |> Enum.map(fn(key) -> {key, row[key]} end)
-  # end
-
-  def render(data, fields, aliases \\ []) do
+  def render_table(data, fields, aliases \\ %{}) do
     with col_data = to_column_data(data, fields),
-        lengths = field_lengths(col_data),
-      do: render_columns_as_rows(col_data, lengths)
+        lengths = field_lengths(col_data)
+    do
+      [
+        render_headers(fields, lengths, aliases),
+        render_divider(lengths),
+        render_columns_as_rows(col_data, lengths)
+      ]
+      |> Enum.join("\n")
+    end
   end
 
   def to_column_data(data, fields) do
     Enum.map(fields, fn(field) -> 
-      for row <- data, do: row[field] 
+      for row <- data
+      do 
+        {:ok, value} = Map.fetch(row, field)
+        value 
+      end
     end)
   end
 
@@ -34,23 +28,16 @@ defmodule IssueManager.Formatters.TextTable do
       do: col |> Enum.map(&(String.length("#{&1}"))) |> Enum.max()
   end
 
-  def render_headers(field_list, lengths, aliases) do
-    # field_list
-    # |> Enum.reduce([], fn(key, row) -> List.insert_at(row, -1, {key, Map.get(aliases, key, key)}) end)
-    # |> render_row(" | ", " ")    
+  def render_headers(fields, lengths, aliases \\ %{}) do
+    fields
+    |> Enum.map(&(Map.get(aliases, &1, &1)))
+    |> List.to_tuple()
+    |> render_row(lengths, "|", " ")
   end
 
-  def render_divider(field_list) do
-    # field_list
-    # |> Enum.reduce([], fn(key, row) -> List.insert_at(row, -1, {key, "-"}) end)
-    # |> render_row("-+-", "-")    
+  def render_divider(lengths) do
+    Enum.map_join(lengths, "+", &(String.duplicate("-", &1)))
   end
-
-  # def render_body(data) do
-  #   data
-  #   |> Enum.map(fn(row) -> render_row(row, " | ", " ") end)
-  #   |> Enum.join("\n")
-  # end
 
   def render_columns_as_rows(col_data, lengths) do
     col_data 
@@ -58,12 +45,6 @@ defmodule IssueManager.Formatters.TextTable do
     |> Enum.map(fn(row) -> render_row(row, lengths, "|", " ") end)
     |> Enum.join("\n")
   end
-
-  # def render_row(row, delimiter, pad_char) do
-  #   row 
-  #   |> Enum.map(fn({key, value}) -> render_field(value, @lengths[key], pad_char) end) 
-  #   |> Enum.join(delimiter)
-  # end
 
   def render_row(row_tuple, lengths, delimiter, pad_char) do
     row_tuple
