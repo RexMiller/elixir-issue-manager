@@ -8,14 +8,22 @@ defmodule IssueManager.GithubClient do
   @user_agent [{"User-agent", "Elixir miller.rex@gmail.com"}]
 
   def get(endpoint, user, project) do
-    Logger.info("Fetching user #{user}, project #{project}")
     format_url(endpoint, user, project)
+    |> log_inline("GET ~s")
     |> HTTPoison.get(@user_agent)
     |> handle_response()
   end
 
   defp format_url(endpoint, user, project) do
     "#{endpoint}/repos/#{user}/#{project}/issues"
+  end
+
+  defp log_inline(value, format) do
+    :io_lib.format(format, [value])
+    |> List.to_string()
+    |> Logger.info
+
+    value
   end
 
   defp handle_response({:ok, %{status_code: 200, body: body}}) do

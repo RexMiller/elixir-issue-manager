@@ -5,9 +5,11 @@ defmodule IssueManager.Formatters.TextTable do
         lengths = field_lengths(col_data)
     do
       [
+        "\n",
         render_headers(fields, lengths, aliases),
         render_divider(lengths),
-        render_columns_as_rows(col_data, lengths)
+        render_columns_as_rows(col_data, lengths),
+        "\n"
       ]
       |> Enum.join("\n")
     end

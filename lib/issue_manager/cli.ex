@@ -4,6 +4,7 @@ defmodule IssueManager.Cli do
   """
 
   alias IssueManager.GithubClient, as: Github
+  alias IssueManager.Issue, as: Issue
   import IssueManager.Formatters.TextTable
 
   @default_count 2
@@ -51,7 +52,7 @@ defmodule IssueManager.Cli do
     |> decode_response()
     |> Enum.take(count)
     |> sort_ascending()
-    |> Enum.map(fn(issue) -> IssueManager.Issue.create(issue) end)   
+    |> Enum.map(fn(issue_map) -> Issue.create(issue_map) end)   
     |> render_table([:number, :created_at, :title], %{:number => "#"})
   end
 
